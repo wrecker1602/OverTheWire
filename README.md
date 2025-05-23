@@ -184,3 +184,141 @@ HWasnPhtq9AVKe0dmk45nxy20cvUa6EG
 
 # Level 6
 
+The password for the next level is stored somewhere on the server and has all of the following properties:
+
+owned by user bandit7
+owned by group bandit6
+33 bytes in size
+Commands you may need to solve this level
+ls , cd , cat , file , du , find , grep
+
+We will need to find another file, but as we can predict with the information we have been given, we won't be able to find the file with only the find command with the -size syntax. So well need to add other options to the find command. 
+
+```bash
+bandit6@bandit:~$ find .-path / -group bandit6 -user bandit7 -size 33c 2>/dev/null
+/var/lib/dpkg/info/bandit7.password
+```
+
+We define the path in the root dir because we'll need to search the whole system, then we define the group, user and size. And we add "2>/dev/null" at the end because otherwise we'll be spammed to death with folders we don't have permission to. With this command we found the password to let's cat it.
+
+```bash
+bandit6@bandit:~$ cat /var/lib/dpkg/info/bandit7.password
+morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj
+```
+
+# Level 7
+
+The password for the next level is stored in the file data.txt next to the word millionth
+
+Commands you may need to solve this level
+man, grep, sort, uniq, strings, base64, tr, tar, gzip, bzip2, xxd
+
+We know that the password is stored next to the word "millionth" in the data.txt file. We'll need to grep for that word in the text file to find the password.
+
+```bash
+bandit7@bandit:~$ grep millionth data.txt
+millionth       dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+```
+
+# Level 8
+
+The password for the next level is stored in the file data.txt and is the only line of text that occurs only once
+
+Commands you may need to solve this level
+grep, sort, uniq, strings, base64, tr, tar, gzip, bzip2, xxd
+
+Helpful Reading Material
+Piping and Redirection
+
+We know that the password is hidden in the data.txt file again and is the only string that is in there once. So we'll need to use the uniq and sort commands to sort the file for unique strings.
+
+```bash
+bandit8@bandit:~$ sort data.txt | uniq -u
+4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
+```
+
+first we need to sort the data file, because uniq can only filter out on strings that are the same and adjecent to eachother. Then we use uniq -u to filter out the double strings.
+
+# Level 9 
+
+The password for the next level is stored in the file data.txt in one of the few human-readable strings, preceded by several ‘=’ characters.
+
+Commands you may need to solve this level
+grep, sort, uniq, strings, base64, tr, tar, gzip, bzip2, xxd
+
+When trying to cat the data.txt file there is a lot of nonsense we can't read in there. So we can use strings to try and check for any readable strings.
+
+```bash
+bandit9@bandit:~$ strings -n 10 data.txt
+========== the
+========== password{k
+=========== is
+_$DM[q2 RO-;
+========== FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey
+```
+
+We know we can expect a lot of nonsense of small random strings that can fill up the screen quite fast, so that's why we use -n 10, to filter out strings shorter than 10 chars. 
+
+# Level 10
+
+The password for the next level is stored in the file data.txt, which contains base64 encoded data
+
+Commands you may need to solve this level
+grep, sort, uniq, strings, base64, tr, tar, gzip, bzip2, xxd
+
+Helpful Reading Material
+Base64 on Wikipedia
+
+Looking at the info the level gives us, we know that the string in the data.txt file is base64 encoded, so lets base64 decode the context of the file.
+
+```bash
+bandit10@bandit:~$ base64 -d data.txt
+The password is dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr
+```
+
+# Level 11
+
+The password for the next level is stored in the file data.txt, where all lowercase (a-z) and uppercase (A-Z) letters have been rotated by 13 positions
+
+Commands you may need to solve this level
+grep, sort, uniq, strings, base64, tr, tar, gzip, bzip2, xxd
+
+Helpful Reading Material
+Rot13 on Wikipedia
+
+This is a simple encryption, rot13 changes the position of a letter by 13 spaces, a -> n. So let's rotate the chars to their correct position. We can use an online site to do it for us, or use the "tr" command to rotate the chars.
+
+```bash
+bandit11@bandit:~$ cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+The password is 7x16WNeHIi5YkIhWsfFIqoognUTyj9Q4
+```
+
+With the: 'A-Za-z' part of the command, we define the characters we want to rotate. With the 'N-ZA-Mn-za-m' part, we define that we want to rotate the characters 13 places.
+
+# Level 12
+
+The password for the next level is stored in the file data.txt, which is a hexdump of a file that has been repeatedly compressed. For this level it may be useful to create a directory under /tmp in which you can work. Use mkdir with a hard to guess directory name. Or better, use the command “mktemp -d”. Then copy the datafile using cp, and rename it using mv (read the manpages!)
+
+Commands you may need to solve this level
+grep, sort, uniq, strings, base64, tr, tar, gzip, bzip2, xxd, mkdir, cp, mv, file
+
+Helpful Reading Material
+Hex dump on Wikipedia
+
+Let go to the /tmp dir and make a new folder there to do our stuff in.
+
+```bash
+bandit12@bandit:~$ cd /tmp
+bandit12@bandit:/tmp$ mktemp -d
+/tmp/tmp.yc3OUUhmS5
+bandit12@bandit:/tmp$ cd tmp.yc3OUUhmS5
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ cp ~/data.txt .
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ ll
+total 9984
+drwx------    2 bandit12 bandit12     4096 May 23 20:28 ./
+drwxrwx-wt 4821 root     root     10211328 May 23 20:28 ../
+-rw-r-----    1 bandit12 bandit12     2646 May 23 20:28 data.txt
+```
+
+Here we go to the tmp folder, make a new tmp folder, get in it, and copy the data.txt file into the dir we're in (. part of the command). Let's start decompress the file.
+
