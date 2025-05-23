@@ -21,6 +21,7 @@ Passwords also occasionally change. It is recommended to take notes on how to so
 Should be easy enough, use the command "ssh -p 2220 bandit0@bandit.labs.overthewire.org" with the password "bandit0" and you're in.
 We look around using "ls" and read the readme.
 
+```bash
 bandit0@bandit:~$ ls
 readme
 bandit0@bandit:~$ cat readme
@@ -30,7 +31,8 @@ If you are following a course, workshop, walkthrough or other educational activi
 please inform the instructor about the rules as well and encourage them to
 contribute to the OverTheWire community so we can keep these games free!
 
-The password you are looking for is: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If
+The password you are looking for is: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If 
+```
 
 And there is the password for the next level. 
 
@@ -46,6 +48,7 @@ Google Search for “dashed filename”
 Advanced Bash-scripting Guide - Chapter 3 - Special Characters
 
 When connected to Bandit1 we see this when using ll:
+```bash
 bandit1@bandit:~$ ll
 total 24
 -rw-r-----  1 bandit2 bandit1   33 Apr 10 14:23 -
@@ -54,9 +57,11 @@ drwxr-xr-x 70 root    root    4096 Apr 10 14:24 ../
 -rw-r--r--  1 root    root     220 Mar 31  2024 .bash_logout
 -rw-r--r--  1 root    root    3771 Mar 31  2024 .bashrc
 -rw-r--r--  1 root    root     807 Mar 31  2024 .profile 
+```
 
 We can use the simple cat command on the "-" file. But if we define the current working directory before the "-" file, we can cat it :).
 
+```bash 
 bandit1@bandit:~$ cat ./-
 263JGJPfgU6LtdEvgfWU1XP5yac29mFx
-
+```
