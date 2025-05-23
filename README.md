@@ -18,7 +18,7 @@ Passwords for levels are not saved automatically. If you do not save them yourse
 
 Passwords also occasionally change. It is recommended to take notes on how to solve each challenge. As levels get more challenging, detailed notes are useful to return to where you left off, reference for later problems, or help others after you’ve completed the challenge.```
 
-Should be easy enough, use the command ```ssh -p 2220 bandit0@bandit.labs.overthewire.org``` with the password ```bandit0``` and you're in.
+Should be easy enough, use the command "ssh -p 2220 bandit0@bandit.labs.overthewire.org" with the password "bandit0" and you're in.
 We look around using "ls" and read the readme.
 
 ```bandit0@bandit:~$ ls
