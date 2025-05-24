@@ -322,3 +322,90 @@ drwxrwx-wt 4821 root     root     10211328 May 23 20:28 ../
 
 Here we go to the tmp folder, make a new tmp folder, get in it, and copy the data.txt file into the dir we're in (. part of the command). Let's start decompress the file.
 
+```bash
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ xxd -r data.txt > data.bin
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data.bin
+data: gzip compressed data, was "data2.bin", last modified: Thu Apr 10 14:22:57 2025, max compression, from Unix, original size modulo 2^32 585
+```
+
+We can use xxd to look at the data.txt file and see it's hexdump, with the -r flag we can revert it into a binary, the "> data" puts the output in the file "data". Now let's start decompressing the file. 
+
+```bash
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data.bin data.gz
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ gzip data.gz
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ ll
+total 9988
+drwx------    2 bandit12 bandit12     4096 May 23 20:34 ./
+drwxrwx-wt 4828 root     root     10211328 May 23 20:34 ../
+-rw-rw-r--    1 bandit12 bandit12       25 May 23 20:34 data
+-rw-r-----    1 bandit12 bandit12     2646 May 23 20:28 data.txt
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data
+data: bzip2 compressed data, block size = 900k
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data data.bz2
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ bzip2 -d data.bz2
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ ll
+total 9988
+drwx------    2 bandit12 bandit12     4096 May 23 20:42 ./
+drwxrwx-wt 4836 root     root     10211328 May 23 20:42 ../
+-rw-rw-r--    1 bandit12 bandit12      443 May 23 20:40 data
+-rw-r-----    1 bandit12 bandit12     2646 May 23 20:28 data.txt
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data
+data: gzip compressed data, was "data4.bin", last modified: Thu Apr 10 14:22:57 2025, max compression, from Unix, original size modulo 2^32 20480
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data data.gz
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ gzip -d data.gz
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data
+data: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ tar -xvf data.tar
+data5.bin
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ ll
+total 10016
+drwx------    2 bandit12 bandit12     4096 May 23 20:45 ./
+drwxrwx-wt 4839 root     root     10211328 May 23 20:45 ../
+-rw-r--r--    1 bandit12 bandit12    10240 Apr 10 14:22 data5.bin
+-rw-rw-r--    1 bandit12 bandit12    20480 May 23 20:40 data.tar
+-rw-r-----    1 bandit12 bandit12     2646 May 23 20:28 data.txt
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data5.bin
+data5.bin: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data5.bin data2.tar
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ tar -xvf data2.tar
+data6.bin
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data6.bin
+data6.bin: bzip2 compressed data, block size = 900k
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data6.bin data.bz2
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ bzip2 -d data.bz2
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ ll
+total 10028
+drwx------    2 bandit12 bandit12     4096 May 23 20:47 ./
+drwxrwx-wt 4839 root     root     10211328 May 23 20:47 ../
+-rw-r--r--    1 bandit12 bandit12    10240 Apr 10 14:22 data
+-rw-r--r--    1 bandit12 bandit12    10240 Apr 10 14:22 data2.tar
+-rw-rw-r--    1 bandit12 bandit12    20480 May 23 20:40 data.tar
+-rw-r-----    1 bandit12 bandit12     2646 May 23 20:28 data.txt
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data
+data: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data data3.tar
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ tar -xvf data3.tar
+data8.bin
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data8.bin
+data8.bin: gzip compressed data, was "data9.bin", last modified: Thu Apr 10 14:22:57 2025, max compression, from Unix, original size modulo 2^32 49
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ mv data8.bin data.gz
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ gzip -d data.gz
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ ll
+total 10032
+drwx------    2 bandit12 bandit12     4096 May 23 20:48 ./
+drwxrwx-wt 4840 root     root     10211328 May 23 20:48 ../
+-rw-r--r--    1 bandit12 bandit12       49 Apr 10 14:22 data
+-rw-r--r--    1 bandit12 bandit12    10240 Apr 10 14:22 data2.tar
+-rw-r--r--    1 bandit12 bandit12    10240 Apr 10 14:22 data3.tar
+-rw-rw-r--    1 bandit12 bandit12    20480 May 23 20:40 data.tar
+-rw-r-----    1 bandit12 bandit12     2646 May 23 20:28 data.txt
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ file data
+data: ASCII text
+bandit12@bandit:/tmp/tmp.yc3OUUhmS5$ cat data
+The password is FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn
+```
+
+After that lengty process, we got the password :).
+
+# Level 13
+
