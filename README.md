@@ -844,3 +844,91 @@ NOTE: Try connecting to your own network daemon to see if it works as you think
 Commands you may need to solve this level
 ssh, nc, cat, bash, screen, tmux, Unix ‘job control’ (bg, fg, jobs, &, CTRL-Z, …)
 
+```bash
+bandit20@bandit:~$ ll
+total 36
+drwxr-xr-x  2 root     root      4096 Apr 10 14:23 ./
+drwxr-xr-x 70 root     root      4096 Apr 10 14:24 ../
+-rw-r--r--  1 root     root       220 Mar 31  2024 .bash_logout
+-rw-r--r--  1 root     root      3771 Mar 31  2024 .bashrc
+-rw-r--r--  1 root     root       807 Mar 31  2024 .profile
+-rwsr-x---  1 bandit21 bandit20 15608 Apr 10 14:23 suconnect*
+bandit20@bandit:~$ ./suconnect
+Usage: ./suconnect <portnumber>
+This program will connect to the given port on localhost using TCP. If it receives the correct password from the other side, the next password is transmitted back.
+```
+
+This one was quite tricky for me since I didn't fully understand the description. they want you to setup an nc listener with the password of the last level to echo it. And then use the binary to connect to said netcat port. I used tmax to run the netcat listener in the background.
+
+```bash
+bandit20@bandit:~$ echo -n '0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO' | nc -lvp 1337
+Listening on 0.0.0.0 1337
+[detached (from session 2)]
+bandit20@bandit:~$ ./suconnect 1337 
+Read: 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+Password matches, sending next password
+Connection received on localhost 33916
+EeoULMCra2q0dSkYj561DX7s1CpBuOBt
+```
+
+And we've got the password.
+
+# Level 21
+
+A program is running automatically at regular intervals from cron, the time-based job scheduler. Look in /etc/cron.d/ for the configuration and see what command is being executed.
+
+Commands you may need to solve this level
+cron, crontab, crontab(5) (use “man 5 crontab” to access this)
+
+First we'll look at the cron jobs, after that we'll check the cronjob for the right bandit level, then we'll ofcourse read it.
+```bash
+bandit21@bandit:/etc/cron.d$ ll
+total 48
+drwxr-xr-x   2 root root  4096 Apr 10 14:24 ./
+drwxr-xr-x 121 root root 12288 Apr 21 12:42 ../
+-rw-r--r--   1 root root   123 Apr 10 14:16 clean_tmp
+-rw-r--r--   1 root root   120 Apr 10 14:23 cronjob_bandit22
+-rw-r--r--   1 root root   122 Apr 10 14:23 cronjob_bandit23
+-rw-r--r--   1 root root   120 Apr 10 14:23 cronjob_bandit24
+-rw-r--r--   1 root root   201 Apr  8  2024 e2scrub_all
+-rwx------   1 root root    52 Apr 10 14:24 otw-tmp-dir*
+-rw-r--r--   1 root root   102 Mar 31  2024 .placeholder
+-rw-r--r--   1 root root   396 Jan  9  2024 sysstat
+bandit21@bandit:/etc/cron.d$ cat cronjob_bandit22
+@reboot bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+* * * * * bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+bandit21@bandit:/etc/cron.d$ cat /usr/bin/cronjob_bandit22.sh
+#!/bin/bash
+chmod 644 /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+cat /etc/bandit_pass/bandit22 > /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+bandit21@bandit:~$ cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q
+```
+It seems that the password is right in the tmp folder with that file name :).
+
+# Level 22
+
+A program is running automatically at regular intervals from cron, the time-based job scheduler. Look in /etc/cron.d/ for the configuration and see what command is being executed.
+
+NOTE: Looking at shell scripts written by other people is a very useful skill. The script for this level is intentionally made easy to read. If you are having problems understanding what it does, try executing it to see the debug information it prints.
+
+Commands you may need to solve this level
+cron, crontab, crontab(5) (use “man 5 crontab” to access this)
+
+Let's read the correct cron job again.
+```bash
+bandit22@bandit:~$ ls /etc/cron.d/
+clean_tmp  cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  otw-tmp-dir  sysstat
+bandit22@bandit:~$ cat /etc/cron.d/cronjob_bandit23
+@reboot bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+* * * * * bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+bandit22@bandit:~$ cat /usr/bin/cronjob_bandit23.sh
+#!/bin/bash
+
+myname=$(whoami)
+mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)
+
+echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"
+
+cat /etc/bandit_pass/$myname > /tmp/$mytarget
+```
