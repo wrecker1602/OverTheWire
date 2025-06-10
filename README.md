@@ -1007,3 +1007,469 @@ gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
 A daemon is listening on port 30002 and will give you the password for bandit25 if given the password for bandit24 and a secret numeric 4-digit pincode. There is no way to retrieve the pincode except by going through all of the 10000 combinations, called brute-forcing.
 You do not need to create new connections each time
 
+Let's start bruteforcing the port I guess :).
+
+First we connect to the level and then start bruteforcing the port on the localhost.
+
+When trying to make the bash script, I went to the /tmp folder and wanted to create brute.sh. However, when doing so, it opened an already existing brute.sh script that contained:
+```bash
+#!/bin/bash
+
+pass="gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8"
+
+for pin in $(seq -w 0000 9999); do
+    echo "$pass $pin"
+done | nc localhost 30002
+```
+This script gives the password to the next level.
+
+Yet, because I want to learn myself, I'll try to create my own script instead but this was a nice find I guess. We know that if we enter the wrong pincode, we get the error message: "Wrong! Please enter the correct current password and pincode. Try again." So we'll need to check the terminal for another output and stop the script when that is printed.
+
+bandit24@bandit:/tmp$ nc localhost 30002
+I am the pincode checker for user bandit25. Please enter the password for user bandit24 and the secret pincode on a single line, separated by a space.
+1234
+Wrong! Please enter the correct current password and pincode. Try again.
+
+We now know that we'll first have to provide the password from the last level, and only then we can start trying pins.
+
+So here is my take at the script:
+```bash
+#!/bin/bash
+
+pass="gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8"
+
+for pin in $(seq -w 0000 9999); do
+    echo "$pass $pin"
+done | nc localhost 30002
+```
+
+After some tinkering on the script, I quickly discovered this was just the most simple and correct way to do is. So with dumb luck I managed to clear the level way quicker than I thought.
+
+```bash
+bandit24@bandit:/tmp$ ./raar.sh
+Wrong! Please enter the correct current password and pincode. Try again.
+Wrong! Please enter the correct current password and pincode. Try again.
+Wrong! Please enter the correct current password and pincode. Try again.
+Wrong! Please enter the correct current password and pincode. Try again.
+Wrong! Please enter the correct current password and pincode. Try again.
+Wrong! Please enter the correct current password and pincode. Try again.
+Wrong! Please enter the correct current password and pincode. Try again.
+Correct!
+The password of user bandit25 is iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
+```
+
+# Level 25
+
+Logging in to bandit26 from bandit25 should be fairly easy… The shell for user bandit26 is not /bin/bash, but something else. Find out what it is, how it works and how to break out of it.
+
+NOTE: if you’re a Windows user and typically use Powershell to ssh into bandit: Powershell is known to cause issues with the intended solution to this level. You should use command prompt instead.
+
+Commands you may need to solve this level
+ssh, cat, more, vi, ls, id, pwd
+
+When connected to the machine we see multiple files that are of interest.
+```bash
+bandit25@bandit:~$ ll
+total 40
+drwxr-xr-x  2 root     root     4096 Apr 10 14:23 ./
+drwxr-xr-x 70 root     root     4096 Apr 10 14:24 ../
+-rw-r-----  1 bandit25 bandit25   33 Apr 10 14:23 .bandit24.password
+-r--------  1 bandit25 bandit25 1679 Apr 10 14:23 bandit26.sshkey
+-rw-r-----  1 bandit25 bandit25  151 Apr 10 14:23 .banner
+-rw-r--r--  1 root     root      220 Mar 31  2024 .bash_logout
+-rw-r--r--  1 root     root     3771 Mar 31  2024 .bashrc
+-rw-r-----  1 bandit25 bandit25   66 Apr 10 14:23 .flag
+-rw-r-----  1 bandit25 bandit25    4 Apr 10 14:23 .pin
+-rw-r--r--  1 root     root      807 Mar 31  2024 .profile
+```
+
+Sadly however, I couldn't use the sshkey to login into bandit 26 since it immeadiatly closes the connection ;(.
+
+When checking the /etc/passwd file for more hints, we can see something strange.
+```bash
+bandit23:x:11023:11023:bandit level 23:/home/bandit23:/bin/bash
+bandit24:x:11024:11024:bandit level 24:/home/bandit24:/bin/bash
+bandit25:x:11025:11025:bandit level 25:/home/bandit25:/bin/bash
+bandit26:x:11026:11026:bandit level 26:/home/bandit26:/usr/bin/showtext
+bandit27:x:11027:11027:bandit level 27:/home/bandit27:/bin/bash
+bandit28:x:11028:11028:bandit level 28:/home/bandit28:/bin/bash
+bandit29:x:11029:11029:bandit level 29:/home/bandit29:/bin/bash
+```
+Let's checkout the: "/usr/bin/showtext"
+```bash
+bandit25@bandit:~$ cat /usr/bin/showtext
+#!/bin/sh
+
+export TERM=linux
+
+exec more ~/text.txt
+exit 0
+```
+This one was very tricky for me and I had to lookup a write up. I understood the commands more and vim. And I understood that when trying to ssh into the level, more would be executed to display the message of the connection closed error. 
+
+However, due to the message being very short, more would not do what it's meant to do. But if me make the terminal smaller, it does. And when more works in the way we want to (that we need to press enter to see more of the message.) We can use vim to get a shell on the host. We can do this by pressing "v" and then pressing ":" and typing in shell. But because the shell is not set to /bin/bash we need to change that first. We can do that with: ":set shell=/bin/bash".
+
+Once done we can cat the bandit26 password file with: 
+```bash
+ssh -p 2220 -i bandit26.sshkey bandit26@localhost
+Do the vim stuff
+bandit26@bandit:~$ cat /etc/bandit_pass/bandit26
+s0773xxkk0MXfdqOfPRVr9L3jJBUOgCZ
+```
+
+# Level 26
+
+Good job getting a shell! Now hurry and grab the password for bandit27!
+
+Commands you may need to solve this level
+ls
+
+I have a feeling this will be a bit harder than expected.
+Now that we have a shell on the bandit26 host we see multiple things when looking around:
+```bash
+bandit26@bandit:~$ ll
+total 44
+drwxr-xr-x  3 root     root      4096 Apr 10 14:23 ./
+drwxr-xr-x 70 root     root      4096 Apr 10 14:24 ../
+-rwsr-x---  1 bandit27 bandit26 14884 Apr 10 14:23 bandit27-do*
+-rw-r--r--  1 root     root       220 Mar 31  2024 .bash_logout
+-rw-r--r--  1 root     root      3771 Mar 31  2024 .bashrc
+-rw-r--r--  1 root     root       807 Mar 31  2024 .profile
+drwxr-xr-x  2 root     root      4096 Apr 10 14:23 .ssh/
+-rw-r-----  1 bandit26 bandit26   258 Apr 10 14:23 text.txt
+bandit26@bandit:~$ ./bandit27-do
+Run a command as another user.
+bandit26@bandit:~$ ./bandit27-do cat /etc/bandit_pass/bandit27
+upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB
+```
+Maybe it wasn't so hard after all.
+
+# Level 27
+
+There is a git repository at ssh://bandit27-git@localhost/home/bandit27-git/repo via the port 2220. The password for the user bandit27-git is the same as for the user bandit27.
+
+Clone the repository and find the password for the next level.
+
+Commands you may need to solve this level
+git
+
+Using the standard git clone won't work since port 22 isn't allowed, that's why we need to use a slightly different command:
+```bash
+GIT_SSH_COMMAND="ssh -p 2220" git clone ssh://bandit27-git@localhost/home/bandit27-git/repo
+bandit27@bandit:/tmp/tmp.fNqU6we72X$ ls
+repo
+bandit27@bandit:/tmp/tmp.fNqU6we72X$ cd repo
+bandit27@bandit:/tmp/tmp.fNqU6we72X/repo$ ll
+total 16
+drwxrwxr-x 3 bandit27 bandit27 4096 Jun 10 17:50 ./
+drwx------ 3 bandit27 bandit27 4096 Jun 10 17:50 ../
+drwxrwxr-x 8 bandit27 bandit27 4096 Jun 10 17:50 .git/
+-rw-rw-r-- 1 bandit27 bandit27   68 Jun 10 17:50 README
+bandit27@bandit:/tmp/tmp.fNqU6we72X/repo$ cat README
+The password to the next level is: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN
+```
+
+Hmmm, that was quite easy :).
+
+# Level 28
+
+There is a git repository at ssh://bandit28-git@localhost/home/bandit28-git/repo via the port 2220. The password for the user bandit28-git is the same as for the user bandit28.
+
+Clone the repository and find the password for the next level.
+
+Commands you may need to solve this level
+git
+
+We now do the same tricks as last time:
+```bash
+bandit28@bandit:/tmp/tmp.NIqreIQelA$ GIT_SSH_COMMAND="ssh -p 2220" git clone ssh://bandit28-git@localhost/home/bandit28-git/repo
+Cloning into 'repo'...
+The authenticity of host '[localhost]:2220 ([127.0.0.1]:2220)' can't be established.
+ED25519 key fingerprint is SHA256:C2ihUBV7ihnV1wUXRb4RrEcLfXC5CXlhmAAM/urerLY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Could not create directory '/home/bandit28/.ssh' (Permission denied).
+Failed to add the host to the list of known hosts (/home/bandit28/.ssh/known_hosts).
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+
+
+                      This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+bandit28-git@localhost's password:
+remote: Enumerating objects: 9, done.
+remote: Counting objects: 100% (9/9), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 9 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (9/9), done.
+Resolving deltas: 100% (2/2), done.
+bandit28@bandit:/tmp/tmp.NIqreIQelA$ ll
+total 9984
+drwx------     3 bandit28 bandit28     4096 Jun 10 17:53 ./
+drwxrwx-wt 11205 root     root     10211328 Jun 10 17:53 ../
+drwxrwxr-x     3 bandit28 bandit28     4096 Jun 10 17:53 repo/
+bandit28@bandit:/tmp/tmp.NIqreIQelA$ cd repo
+bandit28@bandit:/tmp/tmp.NIqreIQelA/repo$ ll
+total 16
+drwxrwxr-x 3 bandit28 bandit28 4096 Jun 10 17:53 ./
+drwx------ 3 bandit28 bandit28 4096 Jun 10 17:53 ../
+drwxrwxr-x 8 bandit28 bandit28 4096 Jun 10 17:53 .git/
+-rw-rw-r-- 1 bandit28 bandit28  111 Jun 10 17:53 README.md
+bandit28@bandit:/tmp/tmp.NIqreIQelA/repo$ cat README.md
+# Bandit Notes
+Some notes for level29 of bandit.
+
+## credentials
+
+- username: bandit29
+- password: xxxxxxxxxx
+```
+Hmmmmm, not as easy as one would've hoped. Let's look into the .git log to see if the password was originally in there.
+```bash
+bandit28@bandit:/tmp/tmp.NIqreIQelA/repo/.git$ git log -p
+commit 674690a00a0056ab96048f7317b9ec20c057c06b (HEAD -> master, origin/master, origin/HEAD)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Apr 10 14:23:19 2025 +0000
+
+    fix info leak
+
+diff --git a/README.md b/README.md
+index d4e3b74..5c6457b 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+ ## credentials
+
+ - username: bandit29
+-- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
++- password: xxxxxxxxxx
+
+
+commit fb0df1358b1ff146f581651a84bae622353a71c0
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Apr 10 14:23:19 2025 +0000
+
+    add missing data
+
+diff --git a/README.md b/README.md
+index 7ba2d2f..d4e3b74 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+ ## credentials
+
+ - username: bandit29
+-- password: <TBD>
++- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
+
+
+commit a5fdc97aae2c6f0e6c1e722877a100f24bcaaa46
+Author: Ben Dover <noone@overthewire.org>
+...skipping...
+new file mode 100644
+index 0000000..7ba2d2f
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,8 @@
++# Bandit Notes
++Some notes for level29 of bandit.
++
++## credentials
++
++- username: bandit29
++- password: <TBD>
++
+...skipping...
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Apr 10 14:23:19 2025 +0000
+
+    add missing data
+
+diff --git a/README.md b/README.md
+index 7ba2d2f..d4e3b74 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+ ## credentials
+
+ - username: bandit29
+-- password: <TBD>
++- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
+
+
+commit a5fdc97aae2c6f0e6c1e722877a100f24bcaaa46
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:19 2025 +0000
+
+    initial commit of README.md
+
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..7ba2d2f
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,8 @@
++# Bandit Notes
++Some notes for level29 of bandit.
++
++## credentials
++
++- username: bandit29
++- password: <TBD>
++
+```
+
+Well well well, it's in there after all.
+
+# Level 29
+
+There is a git repository at ssh://bandit29-git@localhost/home/bandit29-git/repo via the port 2220. The password for the user bandit29-git is the same as for the user bandit29.
+
+Clone the repository and find the password for the next level.
+
+Commands you may need to solve this level
+git
+
+Buh buh buh.
+```bash
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ git log -p
+commit 3b8b91fc3c48f1a19d05670fd45d3e3f2621fcfa (HEAD -> master, origin/master, origin/HEAD)
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    fix username
+
+diff --git a/README.md b/README.md
+index 2da2f39..1af21d3 100644
+--- a/README.md
++++ b/README.md
+@@ -3,6 +3,6 @@ Some notes for bandit30 of bandit.
+
+ ## credentials
+
+-- username: bandit29
++- username: bandit30
+ - password: <no passwords in production!>
+
+
+commit 8d2ffeb5e45f87d0abb028aa796e3ebb63c5579c
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    initial commit of README.md
+
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..2da2f39
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,8 @@
++# Bandit Notes
++Some notes for bandit30 of bandit.
++
++## credentials
++
++- username: bandit29
++- password: <no passwords in production!>
++
+```
+The change in username is quite interessting if you'd ask me, not sure if it's a red herring or not but we'll find out.
+```bash
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ git branch -r
+  origin/HEAD -> origin/master
+  origin/dev
+  origin/master
+  origin/sploits-dev
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ git checkout sploits-dev
+branch 'sploits-dev' set up to track 'origin/sploits-dev'.
+Switched to a new branch 'sploits-dev'
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ git log
+commit c2e20a2bcc4815a984fbef4c7a96ca6e4de35c48 (HEAD -> sploits-dev, origin/sploits-dev)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    add some silly exploit, just for shit and giggles
+
+commit 3b8b91fc3c48f1a19d05670fd45d3e3f2621fcfa (origin/master, origin/HEAD, master, list)
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    fix username
+
+commit 8d2ffeb5e45f87d0abb028aa796e3ebb63c5579c
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    initial commit of README.md
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ git log
+commit a97d0dbf8fd910ead6fcf648829ff55c1a629c8e (HEAD -> dev, origin/dev)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    add data needed for development
+
+commit 3910630172946c9ffb75842922e394b772c672bd
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    add gif2ascii
+
+commit 3b8b91fc3c48f1a19d05670fd45d3e3f2621fcfa (origin/master, origin/HEAD, master, list)
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    fix username
+
+commit 8d2ffeb5e45f87d0abb028aa796e3ebb63c5579c
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Apr 10 14:23:21 2025 +0000
+
+    initial commit of README.md
+```
+Looking at the different branches and the logs of them, we can see one of the devs added an exploit while another logs showcases that gif2ascii was added. That could be our golden ticket. While chasing that red herring, the password was just in plaintext in the README.md of the dev branch :O.
+```bash
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ git checkout dev
+ls -la
+Switched to branch 'dev'
+Your branch is up to date with 'origin/dev'.
+total 20
+drwxrwxr-x 4 bandit29 bandit29 4096 Jun 10 18:34 .
+drwx------ 3 bandit29 bandit29 4096 Jun 10 18:13 ..
+drwxrwxr-x 2 bandit29 bandit29 4096 Jun 10 18:34 code
+drwxrwxr-x 8 bandit29 bandit29 4096 Jun 10 18:34 .git
+-rw-rw-r-- 1 bandit29 bandit29  134 Jun 10 18:34 README.md
+bandit29@bandit:/tmp/tmp.N9vZAeCNRR/repo$ cat README.md
+# Bandit Notes
+Some notes for bandit30 of bandit.
+
+## credentials
+
+- username: bandit30
+- password: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL
+```
+
+# Level 30
+
+There is a git repository at ssh://bandit30-git@localhost/home/bandit30-git/repo via the port 2220. The password for the user bandit30-git is the same as for the user bandit30.
+
+Clone the repository and find the password for the next level.
+
+Commands you may need to solve this level
+git
+
+Aw shit, here we go again.
+```bash
+bandit30@bandit:/tmp/tmp.d5IpN7Hkvk/repo$ ll
+total 16
+drwxrwxr-x 3 bandit30 bandit30 4096 Jun 10 18:38 ./
+drwx------ 3 bandit30 bandit30 4096 Jun 10 18:38 ../
+drwxrwxr-x 8 bandit30 bandit30 4096 Jun 10 18:38 .git/
+-rw-rw-r-- 1 bandit30 bandit30   30 Jun 10 18:38 README.md
+bandit30@bandit:/tmp/tmp.d5IpN7Hkvk/repo$ cat README.md
+just an epmty file... muahaha
+```
+Hmmmm
