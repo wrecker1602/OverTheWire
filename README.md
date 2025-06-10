@@ -1,5 +1,5 @@
-# OverTheWire
-OverTheWire walkthrough
+# OverTheWire Bandit
+OverTheWire Bandit walkthrough
 
 I decided to sharpen my basic linux knowledge to finally do OverTheWire, these are just my personal notes of the levels so I might actually learn something :). 
 If you somehow stumble upon this repo and use it to look for tips on how to solve levels, keep in mind that the passwords rotate so they will probs not work for you.
